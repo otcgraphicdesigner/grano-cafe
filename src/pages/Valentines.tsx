@@ -4,6 +4,7 @@ import { Timeline } from '@/components/valentines/Timeline';
 import { TicketStub } from '@/components/valentines/TicketStub';
 import { eventDetails } from '@/data/mockData';
 import { Heart, Instagram, Mail } from 'lucide-react';
+import { Timelineo } from '@/components/valentines/Timelineo';
 
 const Valentines = () => {
   return (
@@ -16,14 +17,14 @@ const Valentines = () => {
         className="fixed top-0 left-0 right-0 z-50 px-4 py-4"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary" fill="currentColor" />
-            </div>
-            <span className="font-display text-lg text-foreground hidden sm:block">
-              Grano
-            </span>
-          </div>
+         <div className="flex items-center">
+  <img
+    src="/grano-logo.png"
+    alt="Grano Cafe Logo"
+    className="h-16 w-auto object-contain"
+  />
+</div>
+
           
           <div className="glass rounded-full px-6 py-2">
             <span className="text-sm text-muted-foreground">
@@ -46,6 +47,7 @@ const Valentines = () => {
 
       {/* Timeline */}
       <Timeline />
+      <Timelineo />
 
       {/* Booking Section */}
       <div id="booking">
