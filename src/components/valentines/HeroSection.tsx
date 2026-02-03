@@ -14,7 +14,7 @@ export const HeroSection = () => {
         {/* Desktop Video */}
         <video
           className="hidden md:block w-full h-full object-cover"
-          src="/a.mp4"
+          src="/desk.mp4"
           autoPlay
           muted
           loop
@@ -24,7 +24,7 @@ export const HeroSection = () => {
         {/* Mobile Video */}
         <video
           className="block md:hidden w-full h-full object-cover"
-          src="/a.mp4"
+          src="/mob.mp4"
           autoPlay
           muted
           loop
@@ -32,7 +32,7 @@ export const HeroSection = () => {
         />
 
         {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/65" />
       </div>
 
       {/* ===== Content ===== */}

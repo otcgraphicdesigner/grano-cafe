@@ -1,7 +1,14 @@
-import { useState } from 'react';
+// D:\grano\landing\grano-cafe\src\components\valentines\TicketStub.tsx
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Check, Sparkles } from 'lucide-react';
 import { eventDetails } from '@/data/mockData';
+
+declare global {
+  interface Window {
+    Razorpay?: any;
+  }
+}
 
 interface BookingForm {
   name: string;
@@ -9,6 +16,20 @@ interface BookingForm {
   email: string;
   phone: string;
 }
+
+type CreateOrderResponse = {
+  ok: boolean;
+  keyId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  error?: string;
+};
+
+type VerifyResponse = {
+  ok: boolean;
+  error?: string;
+};
 
 export const TicketStub = () => {
   const [form, setForm] = useState<BookingForm>({
@@ -19,17 +40,30 @@ export const TicketStub = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [rzpReady, setRzpReady] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSuccess(true);
-  };
+  const amountPaise = useMemo(() => {
+    const price = Number(eventDetails.price || 0);
+    return Math.round(price * 100);
+  }, []);
+
+  const displayAmount = `${eventDetails.currency}${eventDetails.price.toLocaleString()}`;
+
+  useEffect(() => {
+    const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay="checkout"]');
+    if (existing) {
+      setRzpReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.setAttribute('data-razorpay', 'checkout');
+    script.onload = () => setRzpReady(true);
+    script.onerror = () => setRzpReady(false);
+    document.body.appendChild(script);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({
@@ -38,11 +72,150 @@ export const TicketStub = () => {
     }));
   };
 
+  const openRazorpayCheckout = (opts: {
+    keyId: string;
+    orderId: string;
+    amount: number;
+    currency: string;
+  }) => {
+    return new Promise<{
+      razorpay_payment_id: string;
+      razorpay_order_id: string;
+      razorpay_signature: string;
+    }>((resolve, reject) => {
+      if (!window.Razorpay) {
+        reject(new Error('Razorpay SDK not loaded'));
+        return;
+      }
+
+      const options = {
+        key: opts.keyId,
+        order_id: opts.orderId,
+        amount: opts.amount,
+        currency: opts.currency,
+        name: eventDetails.name,
+        description: eventDetails.tagline,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone,
+        },
+        notes: {
+          partnerName: form.partnerName,
+          eventName: eventDetails.name,
+        },
+        theme: {
+          color: '#E11D48',
+        },
+        modal: {
+          ondismiss: () => reject(new Error('Checkout closed')),
+        },
+        handler: (response: any) => {
+          resolve({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+
+      rzp.on('payment.failed', (resp: any) => {
+        reject(new Error(resp?.error?.description || 'Payment failed'));
+      });
+
+      rzp.open();
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!rzpReady) {
+      alert('Payment system is loading. Please try again in a moment.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1) Create order using PHP backend
+      const orderRes = await fetch('/api/create-order.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amountPaise,
+          currency: 'INR',
+          customer: {
+            name: form.name,
+            partnerName: form.partnerName,
+            email: form.email,
+            phone: form.phone,
+          },
+          meta: {
+            eventName: eventDetails.name,
+            eventTagline: eventDetails.tagline,
+            displayAmount,
+          },
+        }),
+      });
+
+      const orderData = (await orderRes.json()) as CreateOrderResponse;
+
+      if (!orderRes.ok || !orderData?.ok) {
+        throw new Error(orderData?.error || 'Failed to create order');
+      }
+
+      // 2) Open Razorpay Checkout
+      const paymentResult = await openRazorpayCheckout({
+        keyId: orderData.keyId,
+        orderId: orderData.orderId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+      });
+
+      // 3) Verify signature via PHP + write to Google Sheet + send email
+      const verifyRes = await fetch('/api/verify-payment.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...paymentResult,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          form: {
+            name: form.name,
+            partnerName: form.partnerName,
+            email: form.email,
+            phone: form.phone,
+          },
+          meta: {
+            eventName: eventDetails.name,
+            eventTagline: eventDetails.tagline,
+            displayAmount,
+          },
+        }),
+      });
+
+      const verifyData = (await verifyRes.json()) as VerifyResponse;
+
+      if (!verifyRes.ok || !verifyData?.ok) {
+        throw new Error(verifyData?.error || 'Payment verification failed');
+      }
+
+      setIsSuccess(true);
+    } catch (err: any) {
+      alert(err?.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="relative py-24 px-4 md:px-8 overflow-hidden velvet-bg">
       {/* Ambient glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[150px]" />
-      
+
       <div className="max-w-2xl mx-auto relative z-10">
         {/* Section header */}
         <motion.div
@@ -152,7 +325,7 @@ export const TicketStub = () => {
                       </div>
                       <div>
                         <label htmlFor="partnerName" className="block text-sm text-muted-foreground mb-2">
-                          Partner's Name
+                          Partner&apos;s Name
                         </label>
                         <input
                           type="text"
@@ -166,7 +339,7 @@ export const TicketStub = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <label htmlFor="email" className="block text-sm text-muted-foreground mb-2">
                         Email Address
@@ -182,7 +355,7 @@ export const TicketStub = () => {
                         placeholder="your@email.com"
                       />
                     </div>
-                    
+
                     <div>
                       <label htmlFor="phone" className="block text-sm text-muted-foreground mb-2">
                         Phone Number
@@ -202,7 +375,7 @@ export const TicketStub = () => {
                     {/* Submit button */}
                     <motion.button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !rzpReady}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full mt-6 py-4 px-8 bg-gradient-neon text-primary-foreground font-semibold rounded-xl heartbeat disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"

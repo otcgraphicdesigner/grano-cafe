@@ -74,23 +74,23 @@ const Valentines = () => {
           {/* Social links */}
           <div className="flex items-center justify-center gap-4 mb-8">
             <a
-              href="#"
+              href="https://www.instagram.com/granohyd/"
               className="w-12 h-12 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
             >
               <Instagram className="w-5 h-5" />
             </a>
-            <a
+            {/* <a
               href="#"
               className="w-12 h-12 rounded-full glass flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
             >
               <Mail className="w-5 h-5" />
-            </a>
+            </a> */}
           </div>
 
           {/* Venue info */}
           <div className="text-sm text-muted-foreground">
             <p>{eventDetails.venue}</p>
-            <p className="mt-1">© 2024 All rights reserved</p>
+            <p className="mt-1">© 2026 All rights reserved</p>
           </div>
 
           {/* Decorative hearts */}

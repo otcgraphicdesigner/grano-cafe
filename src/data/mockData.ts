@@ -122,10 +122,10 @@ export const timelineHours: TimelineHour[] = [
 
 // Event Details
 export const eventDetails = {
-  name: 'The Slow Love Club',
+  name: 'Grano Cafe',
   tagline: 'Love, but at an unhurried pace',
   venue: 'Grano - Coffee Affairs',
-  date: "Valentine's Day 2024",
+  date: "Valentine's Day 2026",
   time: '7:00 PM - 10:00 PM',
   duration: '3 Hours',
   price: 5000,
