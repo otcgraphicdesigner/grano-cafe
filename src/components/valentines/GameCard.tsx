@@ -14,6 +14,8 @@ const iconMap = {
   cup: Wine,
   sketch: Palette,
   dessert: Heart,
+  lock: Heart,
+  sparkles: Heart,
 };
 
 // You can later move these to a constants file or theme

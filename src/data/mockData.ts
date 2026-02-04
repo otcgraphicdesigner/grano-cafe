@@ -21,7 +21,7 @@ export interface GameInfo {
   name: string;
   tagline: string;
   questions: GameQuestion[];
-  icon: 'cards' | 'cup' | 'sketch' | 'dessert';
+  icon: 'cards' | 'cup' | 'sketch' | 'dessert' | 'lock' | 'sparkles';
 }
 
 // Game Questions Data
@@ -56,6 +56,14 @@ export const loveIllustratedQuestions: GameQuestion[] = [
   { id: '19', question: "Sketch your partner's best feature", category: 'creative' },
   { id: '20', question: "Draw your dream home together", category: 'creative' },
 ];
+export const futureVaultQuestions: GameQuestion[] = [
+  { id: '21', question: "Write a promise to your future self", category: 'intimacy' },
+  { id: '22', question: "Describe a dream you want to achieve together", category: 'intimacy' },
+];
+export const whispersOfGratitudeQuestions: GameQuestion[] = [
+  { id: '23', question: "Share something you appreciate about me", category: 'intimacy' },
+  { id: '24', question: "Recall a moment when I made you feel special", category: 'intimacy' },
+];
 
 // Games Data
 export const games: Record<string, GameInfo> = {
@@ -86,6 +94,20 @@ export const games: Record<string, GameInfo> = {
     tagline: 'Draw your memories, no artistic skills required',
     questions: loveIllustratedQuestions,
     icon: 'sketch',
+  },
+  futureVault: {
+    id: 'future-vault',
+    name: 'The Future Vault',
+    tagline: 'Lock away a promise or a dream to be opened one year from today',
+    questions: futureVaultQuestions,
+    icon: 'lock',
+  },
+  whispersOfGratitude: {
+    id: 'whispers-of-gratitude',
+    name: 'Whispers of Gratitude',
+    tagline: 'A gentle exchange of the things you often think but rarely say',
+    questions: whispersOfGratitudeQuestions,
+    icon: 'sparkles',
   },
 };
 
@@ -118,7 +140,7 @@ export const timelineHours: TimelineHour[] = [
     phase: 'Lovers → Partners',
     description: 'Share the last bite. A ritual dessert, a whispered promise, and a Polaroid moment to take home forever.',
     activities: ['"The Last Bite" ritual', 'Love Affair Corner', 'Polaroid goodbye'],
-    games: [],
+    games: [games.futureVault, games.whispersOfGratitude],
     icon: 'flame',
     bgImage: '/3.avif',
   },

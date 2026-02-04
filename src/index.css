@@ -330,3 +330,39 @@
 @media (prefers-reduced-motion: reduce) {
   .shine-text::after { animation: none; transform: translateX(0); opacity: 0.35; }
 }
+ /* @layer utilities {
+  .text-neon-glow {
+    text-shadow: 0 0 10px hsl(330, 100% 50% / 0.5),
+                 0 0 20px hsl(330, 100% 50% / 0.3);
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 25s ease-in-out infinite;
+  }
+
+  @keyframes gradient-x {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+}  */
+@layer utilities {
+  .animate-gradient-x {
+    background-size: 200% auto;
+    animation: gradient-x 8s ease-in-out infinite; /* Sped up from 25s to 8s */
+  }
+
+  @keyframes gradient-x {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Force the background to be black to make the neon pop */
+  .neon-container {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+}
